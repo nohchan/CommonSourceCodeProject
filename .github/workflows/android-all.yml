@@ -14,7 +14,7 @@ jobs:
         group:
           - { name: "a-f", regex: "^[a-f]" }
           - { name: "g-m", regex: "^[g-m]" }
-          - { name: "n-p8", regex: "^(n|p[a-8])" }
+          - { name: "n-p8", regex: "^(n|p[a-z0-8])" }
           - { name: "p9-z", regex: "^(p9|[q-z])" }
 
     steps:
