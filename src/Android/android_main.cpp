@@ -6914,15 +6914,32 @@ void selectDialog(struct android_app *state, const char *message, const char *ad
             currentSelectMessage = std::string(message);
 
             // 前回選択したフォルダが保存されていて実在すれば、そこから開く
+            // 前回選択したフォルダが保存されていて実在すれば、そこから開く
             const char *savedDir = nullptr;
+#ifdef USE_CART
             if (strcmp(addPath, "CART") == 0) savedDir = config.initial_cart_dir;
-            else if (strcmp(addPath, "DISK") == 0) savedDir = config.initial_floppy_disk_dir;
-            else if (strcmp(addPath, "HDD") == 0) savedDir = config.initial_hard_disk_dir;
-            else if (strcmp(addPath, "CD") == 0) savedDir = config.initial_compact_disc_dir;
-            else if (strcmp(addPath, "QD") == 0) savedDir = config.initial_quick_disk_dir;
-            else if (strcmp(addPath, "TAPE") == 0) savedDir = config.initial_tape_dir;
-            else if (strcmp(addPath, "BUBBLE") == 0) savedDir = config.initial_bubble_casette_dir;
-            else if (strcmp(addPath, "BIN") == 0) savedDir = config.initial_binary_dir;
+#endif
+#ifdef USE_FLOPPY_DISK
+            if (strcmp(addPath, "DISK") == 0) savedDir = config.initial_floppy_disk_dir;
+#endif
+#ifdef USE_HARD_DISK
+            if (strcmp(addPath, "HDD") == 0) savedDir = config.initial_hard_disk_dir;
+#endif
+#ifdef USE_COMPACT_DISC
+            if (strcmp(addPath, "CD") == 0) savedDir = config.initial_compact_disc_dir;
+#endif
+#ifdef USE_QUICK_DISK
+            if (strcmp(addPath, "QD") == 0) savedDir = config.initial_quick_disk_dir;
+#endif
+#ifdef USE_TAPE
+            if (strcmp(addPath, "TAPE") == 0) savedDir = config.initial_tape_dir;
+#endif
+#ifdef USE_BUBBLE
+            if (strcmp(addPath, "BUBBLE") == 0) savedDir = config.initial_bubble_casette_dir;
+#endif
+#ifdef USE_BINARY_FILE
+            if (strcmp(addPath, "BIN") == 0) savedDir = config.initial_binary_dir;
+#endif
 
             if (savedDir != nullptr && savedDir[0] != '\0' && check_dir_exists(savedDir) &&
                 strncmp(savedDir, currentBaseDir.c_str(), currentBaseDir.length()) == 0) {
@@ -8401,14 +8418,30 @@ Java_jp_matrix_shikarunochi_emulator_EmulatorActivity_fileSelectCallback(JNIEnv 
             if (lastSlash != std::string::npos) {
                 std::string parentDir = filePath.substr(0, lastSlash);
                 switch (fileSelectIconData[selectingIconIndex].fileSelectType) {
+#ifdef USE_FLOPPY_DISK
                     case FLOPPY_DISK:    my_tcscpy_s(config.initial_floppy_disk_dir, _MAX_PATH, parentDir.c_str()); break;
+#endif
+#ifdef USE_HARD_DISK
                     case HARD_DISK:      my_tcscpy_s(config.initial_hard_disk_dir, _MAX_PATH, parentDir.c_str()); break;
+#endif
+#ifdef USE_COMPACT_DISC
                     case COMPACT_DISC:   my_tcscpy_s(config.initial_compact_disc_dir, _MAX_PATH, parentDir.c_str()); break;
+#endif
+#ifdef USE_TAPE
                     case CASETTE_TAPE:   my_tcscpy_s(config.initial_tape_dir, _MAX_PATH, parentDir.c_str()); break;
+#endif
+#ifdef USE_QUICK_DISK
                     case QUICK_DISK:     my_tcscpy_s(config.initial_quick_disk_dir, _MAX_PATH, parentDir.c_str()); break;
+#endif
+#ifdef USE_CART
                     case CARTRIDGE:      my_tcscpy_s(config.initial_cart_dir, _MAX_PATH, parentDir.c_str()); break;
+#endif
+#ifdef USE_BUBBLE
                     case BUBBLE_CASETTE: my_tcscpy_s(config.initial_bubble_casette_dir, _MAX_PATH, parentDir.c_str()); break;
+#endif
+#ifdef USE_BINARY_FILE
                     case BINARY:         my_tcscpy_s(config.initial_binary_dir, _MAX_PATH, parentDir.c_str()); break;
+#endif
                     default: break;
                 }
                 save_config(configPath);
