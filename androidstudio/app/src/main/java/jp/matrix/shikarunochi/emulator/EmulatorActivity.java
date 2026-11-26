@@ -733,8 +733,12 @@ public class EmulatorActivity extends NativeActivity {
         });
     }
 
-    //https://stackoverflow.com/questions/11730001/create-a-message-dialog-in-android-via-ndk-callback
+    //https://stackoverflow.com
     public int showAlert(final String message, final String itemList, boolean model, final int selectMode) {
+        return showAlert(message, itemList, model, selectMode, 0);
+    }
+
+    public int showAlert(final String message, final String itemList, boolean model, final int selectMode, final int selectIndex) {
         final AtomicInteger buttonId = new AtomicInteger();
         buttonId.set(-1);
         final long[] lastClickTime = {0}; // Shared last click time for all buttons
@@ -750,7 +754,7 @@ public class EmulatorActivity extends NativeActivity {
                 TextView title = dialogView.findViewById(R.id.dialog_title);
                 title.setText(message);
 
-                LinearLayout buttonLayout = dialogView.findViewById(R.id.button_layout);
+                final LinearLayout buttonLayout = dialogView.findViewById(R.id.button_layout);
                 if (!itemList.isEmpty()) {
                     String[] items = itemList.split(";");
                     for (int i = 0; i < items.length; i++) {
@@ -798,6 +802,29 @@ public class EmulatorActivity extends NativeActivity {
 
                 AlertDialog dialog = builder.create();
                 finalDialog[0] = dialog;
+
+                // 画面に描画される「直前」にスクロール位置を確定させる（開いた瞬間からその位置になる）
+                if (selectIndex > 0 && selectIndex < buttonLayout.getChildCount()) {
+                    buttonLayout.getViewTreeObserver().addOnPreDrawListener(new android.view.ViewTreeObserver.OnPreDrawListener() {
+                        @Override
+                        public boolean onPreDraw() {
+                            buttonLayout.getViewTreeObserver().removeOnPreDrawListener(this);
+                            View targetView = buttonLayout.getChildAt(selectIndex);
+                            if (targetView != null) {
+                                android.view.ViewParent parent = buttonLayout.getParent();
+                                while (parent != null && !(parent instanceof ScrollView)) {
+                                    parent = parent.getParent();
+                                }
+                                if (parent instanceof ScrollView) {
+                                    int scrollY = Math.max(0, targetView.getTop() - 100);
+                                    ((ScrollView) parent).scrollTo(0, scrollY);
+                                }
+                            }
+                            return true;
+                        }
+                    });
+                }
+
                 dialog.show();
             }
         });
