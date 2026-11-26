@@ -13,6 +13,9 @@
 
 #include "osd.h"
 #include "../fifo.h"
+// X1などサブCPU経由のキースキャン機種でも取りこぼさないよう保持フレーム数を増やす
+#undef KEY_KEEP_FRAMES
+#define KEY_KEEP_FRAMES 8
 
 #define get_joy_range(min_value, max_value, lo_value, hi_value) \
 { \
