@@ -193,6 +193,7 @@ std::string currentSelectMessage = "";
 std::string currentBaseDir = "";
 std::string currentSubDir = "";
 std::string nextSelectDirPath = "";
+std::string focusTargetPath = ""; // ★追加：スクロール位置を合わせる対象パス（戻ってきたフォルダや前回選んだファイル）
 // ▲▲▲ ここまで ▲▲▲
 FileSelectType fileSelectType;
 FileSelectIconData fileSelectIconData[MAX_FILE_SELECT_ICON];
@@ -6784,14 +6785,14 @@ jint showAlert(struct android_app *state, const char *message, const char *itemN
     // Get the ID of the method we want to call
     // This must match the name and signature from the Java side Signature has to match java
     // implementation (second string hints a java string parameter)
-    jmethodID methodID = jni->GetMethodID(clazz, "showAlert","(Ljava/lang/String;Ljava/lang/String;ZI)I");
+    jmethodID methodID = jni->GetMethodID(clazz, "showAlert","(Ljava/lang/String;Ljava/lang/String;ZII)I");
 
     // Strings passed to the function need to be converted to a java string object
     jstring jmessage = jni->NewStringUTF(message);
     jobjectArray day = 0;
     jstring jfilenames = jni->NewStringUTF(itemNames);
 
-    jint result = jni->CallIntMethod(state->activity->clazz, methodID, jmessage, jfilenames, model, selectMode);
+    jint result = jni->CallIntMethod(state->activity->clazz, methodID, jmessage, jfilenames, model, selectMode, selectIndex);
 
     // Remember to clean up passed values
     jni->DeleteLocalRef(jmessage);
@@ -7007,7 +7008,20 @@ void selectDialog(struct android_app *state, const char *message, const char *ad
                 fileList.push_back(targetDirPath + "/" + filename);
             }
 
-            showAlert(state, currentSelectMessage.c_str(), filenameList.c_str(), true, MEDIA_SELECT);
+            // スクロール位置を合わせるインデックスを検索
+            int targetIndex = 0;
+            if (!focusTargetPath.empty()) {
+                std::string dirTarget = "DIR:" + focusTargetPath;
+                for (size_t i = 0; i < fileList.size(); i++) {
+                    if (fileList[i] == dirTarget || fileList[i] == focusTargetPath) {
+                        targetIndex = static_cast<int>(i);
+                        break;
+                    }
+                }
+                focusTargetPath = "";
+            }
+
+            showAlert(state, currentSelectMessage.c_str(), filenameList.c_str(), true, MEDIA_SELECT, targetIndex);
         }
     } else {
         // Recent（履歴）表示時は従来通り
@@ -8407,6 +8421,12 @@ Java_jp_matrix_shikarunochi_emulator_EmulatorActivity_fileSelectCallback(JNIEnv 
         // ▼▼▼ フォルダ移動時（[DIR] や [UP] ..）も現在の場所を記憶する ▼▼▼
         if (filePath.rfind("DIR:", 0) == 0) {
             nextSelectDirPath = filePath.substr(4);
+            // 親フォルダへ戻る([UP] ..)場合は、今いたフォルダ(currentSubDir)にスクロール位置を合わせる
+            if (nextSelectDirPath.length() < currentSubDir.length()) {
+                focusTargetPath = currentSubDir;
+            } else {
+                focusTargetPath = "";
+            }
             switch (fileSelectIconData[selectingIconIndex].fileSelectType) {
 #ifdef USE_FLOPPY_DISK
                 case FLOPPY_DISK:    my_tcscpy_s(config.initial_floppy_disk_dir, _MAX_PATH, nextSelectDirPath.c_str()); break;
@@ -8442,6 +8462,7 @@ Java_jp_matrix_shikarunochi_emulator_EmulatorActivity_fileSelectCallback(JNIEnv 
 
         // 選んだファイルの親フォルダを記憶して設定ファイルに保存
         {
+            focusTargetPath = filePath; // ★次回開いたときに選んだファイルの位置にスクロールさせる
             size_t lastSlash = filePath.find_last_of('/');
             if (lastSlash != std::string::npos) {
                 std::string parentDir = filePath.substr(0, lastSlash);
