@@ -188,6 +188,12 @@ char applicationDir[_MAX_PATH];
 char configPath[_MAX_PATH];
 
 std::vector<std::string> fileList;
+// ▼▼▼ ここに移動 ▼▼▼
+std::string currentSelectMessage = "";
+std::string currentBaseDir = "";
+std::string currentSubDir = "";
+std::string nextSelectDirPath = "";
+// ▲▲▲ ここまで ▲▲▲
 FileSelectType fileSelectType;
 FileSelectIconData fileSelectIconData[MAX_FILE_SELECT_ICON];
 int selectingIconIndex;
@@ -6883,12 +6889,6 @@ void extendMenu(struct android_app *app, MenuNode node)
     extendMenuDisplay = true;
     jint nodeId = showExtendMenu(app, menu->getCaption(node.getNodeId()).c_str(), extendMenuString.c_str());
 }
-
-// サブフォルダ移動用の状態保持変数
-std::string currentSelectMessage = "";
-std::string currentBaseDir = "";
-std::string currentSubDir = "";
-std::string nextSelectDirPath = ""; // ← この1行を追加
 
 void selectDialog(struct android_app *state, const char *message, const char *addPath, const char *recentFiles) {
     char long_message[_MAX_PATH+33];
