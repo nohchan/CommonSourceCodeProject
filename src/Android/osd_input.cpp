@@ -171,8 +171,13 @@ void OSD::update_input()
             if(input_joy_status[i*6 + 5] > joy_caps[i].dwVposHi) joy_status[i] |= 0x08000000;
         }
         joy_status[i] |= input_joy_button[i];
+        // 上下同時(0x03)や左右同時(0x0c)などの異常値（センサー・未初期化軸の暴走）を弾く
+        if((joy_status[i] & 0x03) == 0x03 || (joy_status[i] & 0x0c) == 0x0c) {
+            joy_status[i] = 0;
+        }
         //if (joy_status[i] > 0) { LOGI("joy_status[%d] = %08x", i, joy_status[i]); }
     }
+
     if(config.use_joy_to_key) {
         int status[256] = {0};
         if(config.joy_to_key_type == 0) {
@@ -289,7 +294,8 @@ void OSD::key_down_native(int code, bool repeat)
     }
 
 	//LOGI("keyDown: %d", code);
-    key_status[code] = keep_frames ? KEY_KEEP_FRAMES : 0x80;
+    // 通常のキーでも指を離した後最低 KEY_KEEP_FRAMES フレームは押下を維持する(0x80 | KEY_KEEP_FRAMES)
+    key_status[code] = keep_frames ? KEY_KEEP_FRAMES : (0x80 | KEY_KEEP_FRAMES);
 #else
     key_status[code] = 0x80;
 #endif
