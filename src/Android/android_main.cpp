@@ -1594,7 +1594,7 @@ void android_main(struct android_app *state) {
     }
 
     // 権限付与待機ループ処理後のクリーンアップ
-    globalAppState = nullptr;
+//    globalAppState = nullptr;
 
     emu = new EMU(state);
     engine.emu_initialized = true;
@@ -6876,60 +6876,104 @@ void extendMenu(struct android_app *app, MenuNode node)
     jint nodeId = showExtendMenu(app, menu->getCaption(node.getNodeId()).c_str(), extendMenuString.c_str());
 }
 
+// サブフォルダ移動用の状態保持変数
+std::string currentSelectMessage = "";
+std::string currentBaseDir = "";
+std::string currentSubDir = "";
+
 void selectDialog(struct android_app *state, const char *message, const char *addPath, const char *recentFiles) {
     char long_message[_MAX_PATH+33];
     fileList.clear();
 
-    fileList.push_back("");  // Adding the eject option
-
     if (recentFiles == nullptr) {
-        // Process the directory as normal
-        const char *aplicationPath = get_application_path();
-        char dirPath[_MAX_PATH];
-        sprintf(dirPath, "%s%s", aplicationPath, addPath);
-        if (!check_dir_exists(dirPath)) {
-            create_dir(dirPath);
+        std::string targetDirPath;
+        bool isSubDir = false;
+
+        // addPath が "/" で始まる場合はサブフォルダ移動（再表示）とみなす
+        if (addPath != nullptr && addPath[0] == '/') {
+            targetDirPath = addPath;
+            isSubDir = (targetDirPath != currentBaseDir);
+        } else {
+            // 初回表示時：ルートフォルダのパスを保存
+            const char *aplicationPath = get_application_path();
+            char dirPath[_MAX_PATH];
+            sprintf(dirPath, "%s%s", aplicationPath, addPath);
+            if (!check_dir_exists(dirPath)) {
+                create_dir(dirPath);
+            }
+            currentBaseDir = std::string(dirPath);
+            currentSelectMessage = std::string(message);
+            targetDirPath = currentBaseDir;
+            isSubDir = false;
         }
-        DIR *dir = opendir(dirPath);
+        currentSubDir = targetDirPath;
+
+        DIR *dir = opendir(targetDirPath.c_str());
+        std::vector<std::string> tempDirList;
         std::vector<std::string> tempFileList;
 
         if (dir == NULL) {
-            char errorMessage[32];
+            char errorMessage[_MAX_PATH + 32];
             sprintf(errorMessage, "Directory does not exist: %s", addPath);
-            sprintf(long_message, "%s\n%s", errorMessage, dirPath);
+            sprintf(long_message, "%s\n%s", errorMessage, targetDirPath.c_str());
             showAlert(state, long_message, "", true, MEDIA_SELECT);
         } else {
             struct dirent *dp;
             while ((dp = readdir(dir)) != NULL) {
                 std::string filename = dp->d_name;
-                if (filename.find_first_of(".") != 0) {  // Skip hidden files and directories
+                if (filename.find_first_of(".") == 0) {
+                    continue; // 隠しファイル・"."・".."をスキップ
+                }
+                std::string fullPath = targetDirPath + "/" + filename;
+                // d_type が DT_DIR の場合、または DT_UNKNOWN で check_dir_exists が true の場合にフォルダと判定
+                bool isDir = (dp->d_type == DT_DIR) || (dp->d_type == DT_UNKNOWN && check_dir_exists(fullPath.c_str()));
+                if (isDir) {
+                    tempDirList.push_back(filename);
+                } else {
                     tempFileList.push_back(filename);
                 }
             }
             closedir(dir);
 
-            // Sort the file list in ascending order
+            // フォルダとファイルをそれぞれ昇順ソート
+            std::sort(tempDirList.begin(), tempDirList.end(), caseInsensitiveCompare);
             std::sort(tempFileList.begin(), tempFileList.end(), caseInsensitiveCompare);
 
+            // 0番目: [EJECT]
             std::string filenameList = "[EJECT]";
-            for (const auto& filename : tempFileList) {
-                if (!filenameList.empty()) {
-                    filenameList += ";";
-                }
-                filenameList += filename;
-                std::string filePath = std::string(dirPath) + "/" + filename;
-                fileList.push_back(filePath);
+            fileList.push_back("");
+
+            // サブフォルダ内の場合は親フォルダへ戻る項目を追加
+            if (isSubDir) {
+                size_t lastSlash = targetDirPath.find_last_of('/');
+                std::string parentPath = (lastSlash != std::string::npos) ? targetDirPath.substr(0, lastSlash) : currentBaseDir;
+                filenameList += ";[UP] ..";
+                fileList.push_back("DIR:" + parentPath);
             }
-            showAlert(state, message, filenameList.c_str(), true, MEDIA_SELECT);
+
+            // サブフォルダ一覧を追加
+            for (const auto& dirname : tempDirList) {
+                filenameList += ";[DIR] " + dirname;
+                fileList.push_back("DIR:" + targetDirPath + "/" + dirname);
+            }
+
+            // ファイル一覧を追加
+            for (const auto& filename : tempFileList) {
+                filenameList += ";" + filename;
+                fileList.push_back(targetDirPath + "/" + filename);
+            }
+
+            showAlert(state, currentSelectMessage.c_str(), filenameList.c_str(), true, MEDIA_SELECT);
         }
     } else {
-        // Process recent files
+        // Recent（履歴）表示時は従来通り
+        fileList.push_back("");
         std::vector<std::string> recentFilePaths;
         std::istringstream iss(recentFiles);
         std::string token;
         while (getline(iss, token, ';')) {
             struct stat buffer;
-            if (stat(token.c_str(), &buffer) == 0) {  // Check if the file exists
+            if (stat(token.c_str(), &buffer) == 0) {
                 recentFilePaths.push_back(token);
             }
         }
@@ -6942,7 +6986,6 @@ void selectDialog(struct android_app *state, const char *message, const char *ad
                 if (!filenameList.empty()) {
                     filenameList += ";";
                 }
-                // filePath のファイル名だけ抽出する
                 std::string filename = filePath.substr(filePath.find_last_of("/\\") + 1);
                 filenameList += filename;
                 fileList.push_back(filePath);
@@ -8316,6 +8359,16 @@ Java_jp_matrix_shikarunochi_emulator_EmulatorActivity_fileSelectCallback(JNIEnv 
     } else {
 
         std::string filePath = fileList.at(id);
+
+        // ▼▼▼ このブロックを追加 ▼▼▼
+        if (filePath.rfind("DIR:", 0) == 0) {
+            std::string nextDir = filePath.substr(4);
+            if (globalAppState != nullptr) {
+                selectDialog(globalAppState, currentSelectMessage.c_str(), nextDir.c_str(), nullptr);
+            }
+            return;
+        }
+        // ▲▲▲ ここまで追加 ▲▲▲
 
         switch (fileSelectIconData[selectingIconIndex].fileSelectType) {
 #ifdef USE_FLOPPY_DISK
