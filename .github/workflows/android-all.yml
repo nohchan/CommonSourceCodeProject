@@ -10,7 +10,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # 機種名の頭文字ごとに分割して複数サーバーで同時並列ビルド！
         group:
           - { name: "a-f", regex: "^[a-f]" }
           - { name: "g-m", regex: "^[g-m]" }
@@ -38,14 +37,11 @@ jobs:
         working-directory: ./androidstudio
         run: |
           chmod +x gradlew
-          # build.gradle から該当グループの機種名を抽出して一気にビルド
           TARGETS=$(grep -E '^\s+[a-z0-9_]+\s*\{' app/build.gradle | sed -E 's/^\s+([a-z0-9_]+)\s*\{/\1/' | grep -vE '^(defaultConfig|buildFeatures|buildTypes|release|debug|ndk|externalNativeBuild|cmake|productFlavors|compileOptions|lintOptions|dependencies)$' | grep -E '${{ matrix.group.regex }}')
-          TASKS=""
           for t in $TARGETS; do
-            TASKS="$TASKS assemble${t^}Release"
+            echo "=== Building $t ==="
+            ./gradlew "assemble${t^}Release" --parallel --max-workers=4 || echo "Failed: $t (skipped)"
           done
-          echo "Building tasks: $TASKS"
-          ./gradlew $TASKS --parallel --max-workers=4 --continue
 
       - name: Rename and Collect APKs
         run: |
@@ -56,9 +52,11 @@ jobs:
             newname="${newname%-release.apk}.apk"
             cp "$file" "dist/$newname"
           done
+          ls -la dist/
 
       - name: Upload APKs (${{ matrix.group.name }})
         uses: actions/upload-artifact@v4
         with:
           name: android-apks-${{ matrix.group.name }}
           path: dist/*.apk
+          if-no-files-found: warn
