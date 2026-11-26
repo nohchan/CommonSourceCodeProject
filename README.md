@@ -17,26 +17,24 @@
 
 <table>
   <tr>
-    <td width="50%" align="center"><img src="screenshots/dark-mode-file-menu.png" alt="Select" valign="bottom"></td>
-    <td width="50%" align="center"><img src="screenshots/donkey-kong-country-retroachievements.gif" alt="Donkey Kong Country gameplay" valign="bottom"></td>
+    <td width="50%" align="center"><img src="screenshots/x1_rootdir.jpg" alt="RootDir" valign="bottom"></td>
+    <td width="50%" align="center"><img src="screenshots/x1_subdir.jpg" alt="SubDir" valign="bottom"></td>
   </tr>
   <tr>
-    <td valign="top" width="50%" align="center">日本語ファイル名表示, Title enabled</td>
-    <td valign="top" width="50%" align="center">Pause screen, per-game overlay enabled</td>
+    <td valign="top" width="50%" align="center">サブディレクトリ対応のゲーム選択画面（X1TurboZ画面）</td>
   </tr>
   <tr><td colspan="2"></td></tr>
   <tr></tr>
   <tr>
-    <td width="50%" align="center"><img src="screenshots/dark-mode-file-menu.png" alt="Select" valign="bottom"></td>
-    <td width="50%" align="center"><img src="screenshots/donkey-kong-country-retroachievements.gif" alt="Donkey Kong Country gameplay" valign="bottom"></td>
+    <td width="50%" align="center"><img src="screenshots/msx_Iligks_episode_IV.jpg" alt="Iligks" valign="bottom"></td>
   </tr>
   <tr>
-    <td valign="top" width="50%" align="center">日本語ファイル名表示, Title enabled</td>
-    <td valign="top" width="50%" align="center">Pause screen, per-game overlay enabled</td>
+    <td valign="top" width="50%" align="center">イリーガス EpisodeIV(MSX)</td>
   </tr>
   <tr><td colspan="2"></td></tr>
   <tr></tr>
-</table>
+ </table>
+ <br>
 
 
 
