@@ -144,6 +144,10 @@ void OSD::update_input()
     memset(joy_status, 0, sizeof(joy_status));
 
     for(int i = 0; i < joy_num && i < 4; i++) {
+        // ★外部ジョイスティックが接続されていないスロット(device_id <= 0)は無視して暴走を防ぐ
+        if(joy_caps[i].device_id <= 0) {
+            continue;
+        }
         joy_status[i] = 0;
 
         if(joy_caps[i].wNumAxes >= 2) {
