@@ -1,13 +1,13 @@
 name: Build Android APK
 
 on:
-  workflow_dispatch: # 手動実行ボタンを追加
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      # 1. サブモジュール（oboeなど）を含めてコードを取得
+      # 1. サブモジュールを含めてコードを取得
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
@@ -20,18 +20,14 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      # 3. Android SDK / NDK のセットアップ
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      # 4. X1turboZ の APK をビルド
+      # 3. X1turboZ の APK をビルド（プリインストール済みのSDK/NDKを使用）
       - name: Build X1turboZ APK
         working-directory: ./androidstudio
         run: |
           chmod +x gradlew
           ./gradlew assembleX1turbozDebug
 
-      # 5. 完成したAPKをダウンロード可能にする
+      # 4. 完成したAPKをダウンロード可能にする
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
