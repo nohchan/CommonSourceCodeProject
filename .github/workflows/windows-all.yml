@@ -1,0 +1,32 @@
+name: Build Windows EXE（全部）
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 360
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Build All Windows EXEs
+        shell: pwsh
+        run: |
+          $solutions = Get-ChildItem -Path "vc++2017" -Filter "*.sln"
+          foreach ($sln in $solutions) {
+            Write-Host "Building $($sln.Name)..."
+            msbuild $sln.FullName /p:Configuration=Release /p:Platform=x64 /p:WindowsTargetPlatformVersion=10.0 /m
+          }
+
+      - name: Upload All EXEs
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-all-exes
+          path: |
+            vc++2017/**/x64/Release/*.exe
+            bin/**/*.exe
