@@ -6912,8 +6912,26 @@ void selectDialog(struct android_app *state, const char *message, const char *ad
             }
             currentBaseDir = std::string(dirPath);
             currentSelectMessage = std::string(message);
-            targetDirPath = currentBaseDir;
-            isSubDir = false;
+
+            // 前回選択したフォルダが保存されていて実在すれば、そこから開く
+            const char *savedDir = nullptr;
+            if (strcmp(addPath, "CART") == 0) savedDir = config.initial_cart_dir;
+            else if (strcmp(addPath, "DISK") == 0) savedDir = config.initial_floppy_disk_dir;
+            else if (strcmp(addPath, "HDD") == 0) savedDir = config.initial_hard_disk_dir;
+            else if (strcmp(addPath, "CD") == 0) savedDir = config.initial_compact_disc_dir;
+            else if (strcmp(addPath, "QD") == 0) savedDir = config.initial_quick_disk_dir;
+            else if (strcmp(addPath, "TAPE") == 0) savedDir = config.initial_tape_dir;
+            else if (strcmp(addPath, "BUBBLE") == 0) savedDir = config.initial_bubble_casette_dir;
+            else if (strcmp(addPath, "BIN") == 0) savedDir = config.initial_binary_dir;
+
+            if (savedDir != nullptr && savedDir[0] != '\0' && check_dir_exists(savedDir) &&
+                strncmp(savedDir, currentBaseDir.c_str(), currentBaseDir.length()) == 0) {
+                targetDirPath = std::string(savedDir);
+                isSubDir = (targetDirPath != currentBaseDir);
+            } else {
+                targetDirPath = currentBaseDir;
+                isSubDir = false;
+            }
         }
         currentSubDir = targetDirPath;
 
@@ -8376,6 +8394,26 @@ Java_jp_matrix_shikarunochi_emulator_EmulatorActivity_fileSelectCallback(JNIEnv 
             return;
         }
         // ▲▲▲ ここまで ▲▲▲
+
+        // 選んだファイルの親フォルダを記憶して設定ファイルに保存
+        {
+            size_t lastSlash = filePath.find_last_of('/');
+            if (lastSlash != std::string::npos) {
+                std::string parentDir = filePath.substr(0, lastSlash);
+                switch (fileSelectIconData[selectingIconIndex].fileSelectType) {
+                    case FLOPPY_DISK:    my_tcscpy_s(config.initial_floppy_disk_dir, _MAX_PATH, parentDir.c_str()); break;
+                    case HARD_DISK:      my_tcscpy_s(config.initial_hard_disk_dir, _MAX_PATH, parentDir.c_str()); break;
+                    case COMPACT_DISC:   my_tcscpy_s(config.initial_compact_disc_dir, _MAX_PATH, parentDir.c_str()); break;
+                    case CASETTE_TAPE:   my_tcscpy_s(config.initial_tape_dir, _MAX_PATH, parentDir.c_str()); break;
+                    case QUICK_DISK:     my_tcscpy_s(config.initial_quick_disk_dir, _MAX_PATH, parentDir.c_str()); break;
+                    case CARTRIDGE:      my_tcscpy_s(config.initial_cart_dir, _MAX_PATH, parentDir.c_str()); break;
+                    case BUBBLE_CASETTE: my_tcscpy_s(config.initial_bubble_casette_dir, _MAX_PATH, parentDir.c_str()); break;
+                    case BINARY:         my_tcscpy_s(config.initial_binary_dir, _MAX_PATH, parentDir.c_str()); break;
+                    default: break;
+                }
+                save_config(configPath);
+            }
+        }
 
         switch (fileSelectIconData[selectingIconIndex].fileSelectType) {
 
