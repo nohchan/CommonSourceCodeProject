@@ -18,8 +18,7 @@ android {
         }
         // Only for debug builds, not for release
         ndk {
-            debugSymbolLevel 'FULL'
-            abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64' // Specify your ABIs
+            abiFilters 'arm64-v8a' // 現代のAndroidスマホ用のみに絞って4倍高速化（32bit端末も使うなら 'armeabi-v7a', 'arm64-v8a'）
         }
     }
 
