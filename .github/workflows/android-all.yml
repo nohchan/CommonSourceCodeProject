@@ -31,6 +31,8 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
+        with:
+          validate-wrappers: false
 
       - name: Build Android APKs (${{ matrix.group.name }})
         working-directory: ./androidstudio
