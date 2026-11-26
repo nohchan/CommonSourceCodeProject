@@ -755,14 +755,20 @@ public class EmulatorActivity extends NativeActivity {
                     String[] items = itemList.split(";");
                     for (int i = 0; i < items.length; i++) {
                         Button button = new Button(EmulatorActivity.this);
-                        button.setText(items[i]);
-                        button.setBackgroundColor(Color.argb(255, 200, 255, 255)); // ARGBで白に近い青
+                        final String itemText = items[i];
+                        final boolean isDirectory = itemText.startsWith("[DIR] ") || itemText.startsWith("[UP] ");
+                        button.setText(itemText);
+                        if (isDirectory) {
+                            button.setBackgroundColor(Color.argb(255, 255, 255, 200)); // フォルダは薄い黄色
+                        } else {
+                            button.setBackgroundColor(Color.argb(255, 200, 255, 255)); // ファイルは薄い青
+                        }
                         final int index = i;
                         button.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
                                 long clickTime = System.currentTimeMillis();
-                                if (clickTime - lastClickTime[0] < 500) { // Double click
+                                if (isDirectory || clickTime - lastClickTime[0] < 500) { // フォルダは1タップ、それ以外はダブルタップ
                                     buttonId.set(index);
                                     fileSelectCallback(index, selectMode);
                                     finalDialog[0].dismiss();
