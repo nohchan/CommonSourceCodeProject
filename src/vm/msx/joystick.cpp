@@ -21,6 +21,20 @@
 #define PSG14_MASK 0x7f
 #endif
 
+static uint8_t get_safe_joy(uint32_t raw, int select)
+{
+	// ポート2(select == 1)は常に未入力扱いにして誤作動を防ぐ
+	if(select != 0) {
+		return PSG14_MASK;
+	}
+	uint8_t val = raw & 0x3f;
+	// 上下同時(0x03)や左右同時(0x0c)などの異常値（未初期化・センサー暴走）は弾く
+	if((val & 0x03) == 0x03 || (val & 0x0c) == 0x0c) {
+		val = 0;
+	}
+	return PSG14_MASK & ~val;
+}
+
 void JOYSTICK::initialize()
 {
 	joy_stat = emu->get_joy_buffer();
@@ -35,8 +49,7 @@ void JOYSTICK::initialize()
 
 void JOYSTICK::event_frame()
 {
-	// テスト用：ジョイスティック入力を強制的に「すべて離した状態(0x7f)」にする
-	d_psg->write_signal(SIG_AY_3_891X_PORT_A, PSG14_MASK, 0x7f);
+	d_psg->write_signal(SIG_AY_3_891X_PORT_A, get_safe_joy(joy_stat[select], select), 0x7f);
 }
 
 void JOYSTICK::write_signal(int id, uint32_t data, uint32_t mask)
@@ -44,7 +57,7 @@ void JOYSTICK::write_signal(int id, uint32_t data, uint32_t mask)
 	if(id == SIG_JOYSTICK_SEL) {
 		if(select != ((data & mask) != 0)) {
 			select = ((data & mask) != 0);
-			d_psg->write_signal(SIG_AY_3_891X_PORT_A, PSG14_MASK, 0x7f);
+			d_psg->write_signal(SIG_AY_3_891X_PORT_A, get_safe_joy(joy_stat[select], select), 0x7f);
 		}
 	}
 }

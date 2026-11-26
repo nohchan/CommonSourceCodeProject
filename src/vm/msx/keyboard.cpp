@@ -14,6 +14,9 @@
 #include "keyboard.h"
 #include "../i8255.h"
 
+// タップしたキーを最低何フレーム保持するか（6フレーム = 約0.1秒）
+#define KEY_HOLD_MIN_FRAMES 6
+
 static const uint8_t key_map[11][8] = {
 	0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37,
 	0x38, 0x39, 0xbd, 0xde, 0xdc, 0xc0, 0xdb, 0xbb,
@@ -32,6 +35,7 @@ void KEYBOARD::initialize()
 {
 	key_stat = emu->get_key_buffer();
 	column = 0;
+	memset(hold_frames, 0, sizeof(hold_frames));
 //	break_pressed = false;
 	
 	// register event to update the key status
@@ -46,6 +50,13 @@ void KEYBOARD::event_frame()
 //	}
 //	break_pressed = new_pressed;
 	
+	for(int i = 0; i < 256; i++) {
+		if(key_stat[i] != 0) {
+			hold_frames[i] = KEY_HOLD_MIN_FRAMES;
+		} else if(hold_frames[i] > 0) {
+			hold_frames[i]--;
+		}
+	}
 	update_keyboard();
 }
 
@@ -63,7 +74,8 @@ void KEYBOARD::update_keyboard()
 	
 	if(column < 11) {
 		for(int i = 0; i < 8; i++) {
-			if(key_stat[key_map[column][i]] != 0) {
+			uint8_t code = key_map[column][i];
+			if(code != 0 && (key_stat[code] != 0 || hold_frames[code] > 0)) {
 				val |= 1 << i;
 			}
 		}
@@ -85,4 +97,3 @@ bool KEYBOARD::process_state(FILEIO* state_fio, bool loading)
 //	state_fio->StateValue(break_pressed);
 	return true;
 }
-

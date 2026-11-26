@@ -28,6 +28,7 @@ private:
 	
 	const uint8_t* key_stat;
 	uint8_t column;
+	uint8_t hold_frames[256];
 //	bool break_pressed;
 	
 	void update_keyboard();
