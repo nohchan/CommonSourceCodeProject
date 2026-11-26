@@ -8404,9 +8404,37 @@ Java_jp_matrix_shikarunochi_emulator_EmulatorActivity_fileSelectCallback(JNIEnv 
 
         std::string filePath = fileList.at(id);
 
-        // ▼▼▼ このブロックに書き換え ▼▼▼
+        // ▼▼▼ フォルダ移動時（[DIR] や [UP] ..）も現在の場所を記憶する ▼▼▼
         if (filePath.rfind("DIR:", 0) == 0) {
             nextSelectDirPath = filePath.substr(4);
+            switch (fileSelectIconData[selectingIconIndex].fileSelectType) {
+#ifdef USE_FLOPPY_DISK
+                case FLOPPY_DISK:    my_tcscpy_s(config.initial_floppy_disk_dir, _MAX_PATH, nextSelectDirPath.c_str()); break;
+#endif
+#ifdef USE_HARD_DISK
+                case HARD_DISK:      my_tcscpy_s(config.initial_hard_disk_dir, _MAX_PATH, nextSelectDirPath.c_str()); break;
+#endif
+#ifdef USE_COMPACT_DISC
+                case COMPACT_DISC:   my_tcscpy_s(config.initial_compact_disc_dir, _MAX_PATH, nextSelectDirPath.c_str()); break;
+#endif
+#ifdef USE_TAPE
+                case CASETTE_TAPE:   my_tcscpy_s(config.initial_tape_dir, _MAX_PATH, nextSelectDirPath.c_str()); break;
+#endif
+#ifdef USE_QUICK_DISK
+                case QUICK_DISK:     my_tcscpy_s(config.initial_quick_disk_dir, _MAX_PATH, nextSelectDirPath.c_str()); break;
+#endif
+#ifdef USE_CART
+                case CARTRIDGE:      my_tcscpy_s(config.initial_cart_dir, _MAX_PATH, nextSelectDirPath.c_str()); break;
+#endif
+#ifdef USE_BUBBLE
+                case BUBBLE_CASETTE: my_tcscpy_s(config.initial_bubble_casette_dir, _MAX_PATH, nextSelectDirPath.c_str()); break;
+#endif
+#ifdef USE_BINARY_FILE
+                case BINARY:         my_tcscpy_s(config.initial_binary_dir, _MAX_PATH, nextSelectDirPath.c_str()); break;
+#endif
+                default: break;
+            }
+            save_config(configPath);
             fileList.clear();
             return;
         }
