@@ -1,0 +1,32 @@
+name: Build Windows EXE（１つだけ）
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'ビルドする機種名（vc++2017内の.slnファイル名。例: x1turboz, pc8801ma）'
+        required: true
+        default: 'x1turboz'
+        type: string
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Build Single Windows EXE
+        run: |
+          msbuild "vc++2017/${{ github.event.inputs.target }}.sln" /p:Configuration=Release /p:Platform=x64 /p:WindowsTargetPlatformVersion=10.0 /m
+
+      - name: Upload EXE
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-${{ github.event.inputs.target }}-exe
+          path: |
+            vc++2017/**/x64/Release/*.exe
+            bin/**/*.exe
