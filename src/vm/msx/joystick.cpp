@@ -26,13 +26,17 @@ void JOYSTICK::initialize()
 	joy_stat = emu->get_joy_buffer();
 	select = 0;
 	
+	// 起動直後のポートAを「何も押されていない状態(High)」に初期化
+	d_psg->write_signal(SIG_AY_3_891X_PORT_A, PSG14_MASK, 0x7f);
+	
 	// register event to update the key status
 	register_frame_event(this);
 }
 
 void JOYSTICK::event_frame()
 {
-	d_psg->write_signal(SIG_AY_3_891X_PORT_A, PSG14_MASK & ~(joy_stat[select] & 0x3f), 0x7f);
+	// テスト用：ジョイスティック入力を強制的に「すべて離した状態(0x7f)」にする
+	d_psg->write_signal(SIG_AY_3_891X_PORT_A, PSG14_MASK, 0x7f);
 }
 
 void JOYSTICK::write_signal(int id, uint32_t data, uint32_t mask)
@@ -40,7 +44,7 @@ void JOYSTICK::write_signal(int id, uint32_t data, uint32_t mask)
 	if(id == SIG_JOYSTICK_SEL) {
 		if(select != ((data & mask) != 0)) {
 			select = ((data & mask) != 0);
-			d_psg->write_signal(SIG_AY_3_891X_PORT_A, PSG14_MASK & ~(joy_stat[select] & 0x3f), 0x7f);
+			d_psg->write_signal(SIG_AY_3_891X_PORT_A, PSG14_MASK, 0x7f);
 		}
 	}
 }
@@ -58,4 +62,3 @@ bool JOYSTICK::process_state(FILEIO* state_fio, bool loading)
 	state_fio->StateValue(select);
 	return true;
 }
-
