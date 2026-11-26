@@ -109,10 +109,18 @@ static bool load_cart(const _TCHAR *file_path, uint8_t *rom)
 			memcpy(rom + 0x4000, rom, 0x4000);
 			memcpy(rom + 0x8000, rom, 0x8000);
 		} else if(file_size <= 0x4000) {
-			// 16KB: 01010101
-			fio->Fread(rom, 0x4000, 1);
-			memcpy(rom + 0x4000, rom, 0x4000);
-			memcpy(rom + 0x8000, rom, 0x8000);
+			// 16KB: ヘッダの開始アドレス(INIT)に応じて配置先を決定
+			uint8_t buf[0x4000];
+			fio->Fread(buf, 0x4000, 1);
+			uint16_t init_addr = buf[2] | (buf[3] << 8);
+			if(buf[0] == 'A' && buf[1] == 'B' && init_addr >= 0x8000 && init_addr < 0xc000) {
+				// 0x8000-0xBFFF (Page 2) に配置するタイプ (イリーガスなど)
+				memcpy(rom + 0x8000, buf, 0x4000);
+			} else {
+				// 通常の 0x4000-0x7FFF (Page 1) に配置するタイプ
+				memcpy(rom + 0x4000, buf, 0x4000);
+				memcpy(rom + 0x8000, buf, 0x4000);
+			}
 		} else if(file_size <= 0x8000) {
 			// 32KB: 01012323
 			fio->Fread(rom + 0x4000, 0x8000, 1);
