@@ -142,11 +142,13 @@ bool SLOT_CART::load_cart(const _TCHAR *file_path/*, uint8_t *rom*/)
 			memcpy(rom + 0x4000, rom, 0x4000);
 			memcpy(rom + 0x8000, rom, 0x8000);
 		} else if(file_size <= 0x4000) {
-			// 16KB: ヘッダの開始アドレス(INIT)に応じて配置先を決定
+			// 16KB: INIT(0x02-0x03) または TEXT(0x08-0x09) のアドレスに応じて配置先を決定
 			uint8_t buf[0x4000];
 			fio->Fread(buf, 0x4000, 1);
 			uint16_t init_addr = buf[2] | (buf[3] << 8);
-			if(buf[0] == 'A' && buf[1] == 'B' && init_addr >= 0x8000 && init_addr < 0xc000) {
+			uint16_t text_addr = buf[8] | (buf[9] << 8);
+			if(buf[0] == 'A' && buf[1] == 'B' &&
+			   ((init_addr >= 0x8000 && init_addr < 0xc000) || (text_addr >= 0x8000 && text_addr < 0xc000))) {
 				// 0x8000-0xBFFF (Page 2) に配置するタイプ (イリーガスなど)
 				memcpy(rom + 0x8000, buf, 0x4000);
 			} else {
