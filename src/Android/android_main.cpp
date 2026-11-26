@@ -1856,6 +1856,14 @@ void android_main(struct android_app *state) {
             selectD88Bank(state, selectDiskDrive);
         }
 #endif
+        // ▼▼▼ ここから追加 ▼▼▼
+        if (!nextSelectDirPath.empty()) {
+            std::string dirToOpen = nextSelectDirPath;
+            nextSelectDirPath = "";
+            selectDialog(state, currentSelectMessage.c_str(), dirToOpen.c_str(), nullptr);
+        }
+        // ▲▲▲ ここまで追加 ▲▲▲
+
         // 通知ノードが有効か確認する
         if (notifyMenuNode.nodeId != -1) {
             // 通知ノードの ItemType で分岐する
@@ -6880,6 +6888,7 @@ void extendMenu(struct android_app *app, MenuNode node)
 std::string currentSelectMessage = "";
 std::string currentBaseDir = "";
 std::string currentSubDir = "";
+std::string nextSelectDirPath = ""; // ← この1行を追加
 
 void selectDialog(struct android_app *state, const char *message, const char *addPath, const char *recentFiles) {
     char long_message[_MAX_PATH+33];
@@ -8360,17 +8369,16 @@ Java_jp_matrix_shikarunochi_emulator_EmulatorActivity_fileSelectCallback(JNIEnv 
 
         std::string filePath = fileList.at(id);
 
-        // ▼▼▼ このブロックを追加 ▼▼▼
+        // ▼▼▼ このブロックに書き換え ▼▼▼
         if (filePath.rfind("DIR:", 0) == 0) {
-            std::string nextDir = filePath.substr(4);
-            if (globalAppState != nullptr) {
-                selectDialog(globalAppState, currentSelectMessage.c_str(), nextDir.c_str(), nullptr);
-            }
+            nextSelectDirPath = filePath.substr(4);
+            fileList.clear();
             return;
         }
-        // ▲▲▲ ここまで追加 ▲▲▲
+        // ▲▲▲ ここまで ▲▲▲
 
         switch (fileSelectIconData[selectingIconIndex].fileSelectType) {
+
 #ifdef USE_FLOPPY_DISK
             case FLOPPY_DISK:
                 LOGI("Set floppy disk %s", filePath.c_str());
