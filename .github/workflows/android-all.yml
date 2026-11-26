@@ -6,7 +6,17 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 360
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        # 機種名の頭文字ごとに分割して複数サーバーで同時並列ビルド！
+        group:
+          - { name: "a-f", regex: "^[a-f]" }
+          - { name: "g-m", regex: "^[g-m]" }
+          - { name: "n-p8", regex: "^(n|p[a-8])" }
+          - { name: "p9-z", regex: "^(p9|[q-z])" }
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -19,11 +29,21 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Build All Android APKs
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build Android APKs (${{ matrix.group.name }})
         working-directory: ./androidstudio
         run: |
           chmod +x gradlew
-          ./gradlew assembleRelease --continue
+          # build.gradle から該当グループの機種名を抽出して一気にビルド
+          TARGETS=$(grep -E '^\s+[a-z0-9_]+\s*\{' app/build.gradle | sed -E 's/^\s+([a-z0-9_]+)\s*\{/\1/' | grep -vE '^(defaultConfig|buildFeatures|buildTypes|release|debug|ndk|externalNativeBuild|cmake|productFlavors|compileOptions|lintOptions|dependencies)$' | grep -E '${{ matrix.group.regex }}')
+          TASKS=""
+          for t in $TARGETS; do
+            TASKS="$TASKS assemble${t^}Release"
+          done
+          echo "Building tasks: $TASKS"
+          ./gradlew $TASKS --parallel --max-workers=4 --continue
 
       - name: Rename and Collect APKs
         run: |
@@ -34,10 +54,9 @@ jobs:
             newname="${newname%-release.apk}.apk"
             cp "$file" "dist/$newname"
           done
-          ls -la dist/
 
-      - name: Upload All APKs
+      - name: Upload APKs (${{ matrix.group.name }})
         uses: actions/upload-artifact@v4
         with:
-          name: android-all-apks
+          name: android-apks-${{ matrix.group.name }}
           path: dist/*.apk

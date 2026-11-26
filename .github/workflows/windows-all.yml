@@ -6,7 +6,13 @@ on:
 jobs:
   build:
     runs-on: windows-latest
-    timeout-minutes: 360
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        # 頭文字ごとに4台のWindowsサーバーで同時並列ビルド！
+        pattern: ["[a-f]*.sln", "[g-m]*.sln", "[n-p]*.sln", "[q-z]*.sln"]
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -14,19 +20,19 @@ jobs:
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
 
-      - name: Build All Windows EXEs
+      - name: Build Windows EXEs (${{ matrix.pattern }})
         shell: pwsh
         run: |
-          $solutions = Get-ChildItem -Path "vc++2017" -Filter "*.sln"
+          $solutions = Get-ChildItem -Path "vc++2017" -Filter "${{ matrix.pattern }}"
           foreach ($sln in $solutions) {
             Write-Host "Building $($sln.Name)..."
-            msbuild $sln.FullName /p:Configuration=Release /p:Platform=x64 /p:WindowsTargetPlatformVersion=10.0 /m
+            msbuild $sln.FullName /p:Configuration=Release /p:Platform=x64 /p:WindowsTargetPlatformVersion=10.0 /m /nologo /verbosity:minimal
           }
 
-      - name: Upload All EXEs
+      - name: Upload EXEs
         uses: actions/upload-artifact@v4
         with:
-          name: windows-all-exes
+          name: windows-exes-${{ strategy.job-index }}
           path: |
             vc++2017/**/x64/Release/*.exe
             bin/**/*.exe
