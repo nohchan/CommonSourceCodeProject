@@ -21,10 +21,9 @@
     <td width="50%" align="center"><img src="screenshots/x1_subdir.jpg" alt="SubDir" valign="bottom"></td>
   </tr>
   <tr>
-    <td valign="top" width="50%" align="center">１クリックでルートとサブディレクトリを切り替えるゲーム選択画面（X1TurboZ画面）</td>
+    <td colspan="2" align="center">１クリックでルートとサブディレクトリを切り替えるゲーム選択画面（X1TurboZ画面）</td>
   </tr>
   <tr><td colspan="2"></td></tr>
-  <tr></tr>
   <tr>
     <td width="50%" align="center"><img src="screenshots/msx_Iligks_episode_IV.jpg" alt="Iligks" valign="bottom"></td>
   </tr>
@@ -32,7 +31,6 @@
     <td valign="top" width="50%" align="center">イリーガス EpisodeIV(MSX)</td>
   </tr>
   <tr><td colspan="2"></td></tr>
-  <tr></tr>
  </table>
  <br>
 
