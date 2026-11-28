@@ -86,5 +86,6 @@ public:
 	{
 		return MEMORY_BASE + RAM_BASE;
 	}
+	void draw_screen() {}
 };
 #endif
