@@ -126,7 +126,7 @@ VM::VM(EMU* parent_emu) : VM_TEMPLATE(parent_emu)
 #else
 	voice = new UPD7752(this, emu);
 	event->set_context_sound(voice);
-	// memory->set_context_timer(timer);	// Medamap no member named set_context_timer
+	memory->set_context_timer(timer); // ← このコメントアウトを解除
 #endif
 	memory->set_context_cpu(cpu);
 	joystick->set_context_psg(psg);
