@@ -61,7 +61,8 @@
 #endif
 #endif
 
-#if defined(USE_MOVIE_PLAYER) || defined(USE_VIDEO_CAPTURE)
+// 【変更後】
+#if (defined(USE_MOVIE_PLAYER) || defined(USE_VIDEO_CAPTURE)) && !defined(__ANDROID__)
 #pragma comment(lib, "strmiids.lib")
 #include <dshow.h>
 //#include <qedit.h>
@@ -87,7 +88,8 @@ public:
 	virtual HRESULT STDMETHODCALLTYPE SetCallback( ISampleGrabberCB *pCallback,long WhichMethodToCallback) = 0;
 };
 #endif
-#ifdef USE_MOVIE_PLAYER
+// 【変更後】
+#if defined(USE_MOVIE_PLAYER) && !defined(__ANDROID__)
 class CMySampleGrabberCB : public ISampleGrabberCB {
 private:
 	VM_TEMPLATE *vm;
@@ -149,7 +151,8 @@ public:
 #define SOCKET_ERROR (-1)
 #endif
 
-#ifdef USE_VIDEO_CAPTURE
+// 【変更後】
+#if defined(USE_VIDEO_CAPTURE) && !defined(__ANDROID__)
 #define MAX_CAPTURE_DEVS 8
 #endif
 
@@ -346,7 +349,7 @@ private:
 	int rec_sound_buffer_ptr;
 	
 	// video device
-#if defined(USE_MOVIE_PLAYER) || defined(USE_VIDEO_CAPTURE)
+#if (defined(USE_MOVIE_PLAYER) || defined(USE_VIDEO_CAPTURE)) && !defined(__ANDROID__)
 	void initialize_video();
 	void release_video();
 	
@@ -372,11 +375,12 @@ private:
 	int direct_show_width, direct_show_height;
 	bool direct_show_mute[2];
 #endif
-#ifdef USE_MOVIE_PLAYER
+// 【変更後】
+#if defined(USE_MOVIE_PLAYER) && !defined(__ANDROID__)
 	double movie_frame_rate;
 	int movie_sound_rate;
 #endif
-#ifdef USE_VIDEO_CAPTURE
+#if defined(USE_VIDEO_CAPTURE) && !defined(__ANDROID__)
 	void enum_capture_devs();
 	bool connect_capture_dev(int index, bool pin);
 	int cur_capture_dev_index;
@@ -561,11 +565,12 @@ public:
 	void reset_sound();
 
 	// common video device
-#if defined(USE_MOVIE_PLAYER) || defined(USE_VIDEO_CAPTURE)
+#if defined(USE_MOVIE_PLAYER) && !defined(__ANDROID__)
 	void get_video_buffer();
 	void mute_video_dev(bool l, bool r);
 #endif
-#ifdef USE_MOVIE_PLAYER
+// 【変更後】
+#if defined(USE_MOVIE_PLAYER) && !defined(__ANDROID__)
 	bool open_movie_file(const _TCHAR* file_path);
 	void close_movie_file();
 	void play_movie();
@@ -583,7 +588,8 @@ public:
 	uint32_t get_cur_movie_frame();
 	bool now_movie_play, now_movie_pause;
 #endif
-#ifdef USE_VIDEO_CAPTURE
+// 【変更後】
+#if defined(USE_VIDEO_CAPTURE) && !defined(__ANDROID__)
 	int get_cur_capture_dev_index()
 	{
 		return cur_capture_dev_index;
