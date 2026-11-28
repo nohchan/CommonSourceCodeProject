@@ -64,7 +64,6 @@ add_library(native-activity SHARED
         ../../../../../src/vm/noise.cpp
         ../../../../../src/vm/pc6001/joystick.cpp
         ../../../../../src/vm/pc6001/memory.cpp
-        ../../../../../src/vm/pc6001/memory_draw.cpp
         ../../../../../src/vm/pc6001/pc6001.cpp
         ../../../../../src/vm/pc6001/sub.cpp
         ../../../../../src/vm/pc6001/timer.cpp
