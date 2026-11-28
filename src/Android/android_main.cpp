@@ -4449,8 +4449,9 @@ void open_recent_compact_disc(int drv, int index)
 #endif
 
 #ifdef USE_LASER_DISC
-void open_laser_disc_dialog(HWND hWnd, int drv)
+void open_laser_disc_dialog(struct android_app *app, int drv)
 {
+#ifndef __ANDROID__
 	_TCHAR* path = get_open_file_name(
 		hWnd,
 		_T("Supported Files (*.avi;*.mpg;*.mpeg;*.mp4;*.wmv;*.ogv)\0*.avi;*.mpg;*.mpeg;*.mp4;*.wmv;*.ogv\0All Files (*.*)\0*.*\0\0"),
@@ -4463,6 +4464,7 @@ void open_laser_disc_dialog(HWND hWnd, int drv)
 		my_tcscpy_s(config.initial_laser_disc_dir, _MAX_PATH, get_parent_dir(path));
 		emu->open_laser_disc(drv, path);
 	}
+#endif
 }
 
 void open_recent_laser_disc(int drv, int index)
