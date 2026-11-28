@@ -565,11 +565,10 @@ public:
 	void reset_sound();
 
 	// common video device
-#if defined(USE_MOVIE_PLAYER) && !defined(__ANDROID__)
+#if (defined(USE_MOVIE_PLAYER) || defined(USE_VIDEO_CAPTURE)) && !defined(__ANDROID__)
 	void get_video_buffer();
 	void mute_video_dev(bool l, bool r);
 #endif
-// 【変更後】
 #if defined(USE_MOVIE_PLAYER) && !defined(__ANDROID__)
 	bool open_movie_file(const _TCHAR* file_path);
 	void close_movie_file();
@@ -587,6 +586,19 @@ public:
 	void set_cur_movie_frame(int frame, bool relative);
 	uint32_t get_cur_movie_frame();
 	bool now_movie_play, now_movie_pause;
+#elif defined(USE_MOVIE_PLAYER) && defined(__ANDROID__)
+	void get_video_buffer() {}
+	void mute_video_dev(bool l, bool r) {}
+	bool open_movie_file(const _TCHAR* file_path) { return false; }
+	void close_movie_file() {}
+	void play_movie() {}
+	void stop_movie() {}
+	void pause_movie() {}
+	double get_movie_frame_rate() { return 0.0; }
+	int get_movie_sound_rate() { return 0; }
+	void set_cur_movie_frame(int frame, bool relative) {}
+	uint32_t get_cur_movie_frame() { return 0; }
+	bool now_movie_play = false, now_movie_pause = false;
 #endif
 // 【変更後】
 #if defined(USE_VIDEO_CAPTURE) && !defined(__ANDROID__)
