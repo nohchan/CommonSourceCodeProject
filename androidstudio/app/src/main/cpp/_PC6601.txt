@@ -81,5 +81,5 @@ add_library(native-activity SHARED
         ../../../../../src/Android/osd_sound.cpp
         ../../../../../src/Android/osd_console.cpp
         ../../../../../src/Android/menu/BaseMenu.cpp
-        ../../../../../src/Android/menu/pc6601.cpp
+        ../../../../../src/Android/menu/pc6001.cpp
 )
