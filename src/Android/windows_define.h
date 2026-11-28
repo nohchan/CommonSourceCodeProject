@@ -377,4 +377,6 @@
 #define VK_OEM_8          0xDF
 #define VK_OEM_102        0xE2  //  '<>' for US         '\_' for JP
 
+typedef void* HWND;
+
 #endif //ANDROIDSTUDIO_WINDOWS_DEFINE_H
